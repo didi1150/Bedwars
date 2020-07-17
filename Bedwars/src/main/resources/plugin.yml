@@ -1,0 +1,6 @@
+name: Bedwars
+version: 1.0
+author: Didi
+main: me.didi.BWMain
+commands:
+  bw: 
