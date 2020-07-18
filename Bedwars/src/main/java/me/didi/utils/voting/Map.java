@@ -1,6 +1,7 @@
 package me.didi.utils.voting;
 
 import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
 
 import me.didi.BWMain;
 
@@ -11,11 +12,15 @@ public class Map
 	private String name;
 	private Location spectatorSpawnLocation;
 	private String builder;
+	private int votes;
 
 	public Map(BWMain plugin, String name)
 	{
 		this.plugin = plugin;
 		this.name = name.toUpperCase();
+
+		if (exists())
+			builder = plugin.getConfig().getString("Maps." + getName() + ".Builder");
 	}
 
 	public boolean exists()
@@ -33,6 +38,16 @@ public class Map
 	public void delete()
 	{
 		plugin.getConfig().set("Maps." + this.name, null);
+	}
+
+	public boolean playable()
+	{
+		ConfigurationSection configurationSection = plugin.getConfig().getConfigurationSection("Maps." + name.toUpperCase());
+		if (!configurationSection.contains("teams"))
+			return false;
+		if (!configurationSection.contains("spectatorspawn"))
+			return false;
+		return true;
 	}
 
 	public String getName()
@@ -60,6 +75,21 @@ public class Map
 	public String getBuilder()
 	{
 		return this.builder;
+	}
+
+	public int getVotes()
+	{
+		return votes;
+	}
+
+	public void addVote()
+	{
+		votes++;
+	}
+
+	public void removeVote()
+	{
+		votes--;
 	}
 
 }

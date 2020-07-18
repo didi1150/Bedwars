@@ -5,10 +5,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerListPingEvent;
 
 import me.didi.BWMain;
-import me.didi.utils.GameState;
+import me.didi.utils.gamestates.GameState;
+import me.didi.utils.gamestates.LobbyState;
 
 public class MOTDListener implements Listener
 {
+	BWMain plugin = BWMain.getInstance();
+
 	@EventHandler
 	public void onPing(ServerListPingEvent e)
 	{
@@ -17,7 +20,7 @@ public class MOTDListener implements Listener
 			e.setMotd("INGAME");
 		} else
 		{
-			if (GameState.isState(GameState.LOBBY))
+			if (plugin.getGameStateManager().getCurrentGameState() instanceof LobbyState)
 				e.setMotd("§aLOBBY");
 			else
 				e.setMotd("INGAME");

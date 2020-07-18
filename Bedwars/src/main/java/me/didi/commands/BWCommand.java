@@ -1,5 +1,6 @@
 package me.didi.commands;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -122,6 +123,8 @@ public class BWCommand implements CommandExecutor
 						{
 							BWMain.getInstance().getConfig().set("finished", true);
 							BWMain.getInstance().saveConfig();
+							p.kickPlayer(BWMain.prefix + "§eServer lädt neu!");
+							Bukkit.shutdown();
 						} else
 							p.sendMessage(BWMain.prefix + "§cBitte verwende §6/finish!");
 					} else if (args[0].equalsIgnoreCase("edit"))
@@ -130,6 +133,8 @@ public class BWCommand implements CommandExecutor
 						{
 							BWMain.getInstance().getConfig().set("finished", false);
 							BWMain.getInstance().saveConfig();
+							p.kickPlayer(BWMain.prefix + "§eServer lädt neu!");
+							Bukkit.shutdown();
 						} else
 							p.sendMessage(BWMain.prefix + "§cBitte verwende §6/edit!");
 					} else if (args[0].equalsIgnoreCase("createSpawner"))
@@ -196,10 +201,11 @@ public class BWCommand implements CommandExecutor
 								{
 									t.setSpawn(map, p.getLocation());
 									p.sendMessage(BWMain.prefix + "§aDu hast erfolgreich den Spawn von Team "
-											+ t.getPrefix() + t.getName() + " §agesetzt!");
+											+ t.getPrefix().replaceAll("&", "§") + t.getName() + " §agesetzt!");
 								} else
 									p.sendMessage(BWMain.prefix + "§cDas Team existiert nicht!");
-							}else p.sendMessage(BWMain.prefix + "§cDie Map existiert nicht!");
+							} else
+								p.sendMessage(BWMain.prefix + "§cDie Map existiert nicht!");
 						} else
 							p.sendMessage(BWMain.prefix + "§cVerwende §6/bw setspawn <map> <team>!");
 					}
