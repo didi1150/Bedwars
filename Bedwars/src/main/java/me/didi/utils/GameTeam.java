@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -16,19 +15,19 @@ import me.didi.utils.voting.Map;
 public class GameTeam
 {
 	private String name, prefix;
-	private ArrayList<String> players;
+	private ArrayList<String> members;
 	private byte colorData;
 	private int maxPlayers;
 	private Location spawn;
 	static BWMain plugin = BWMain.getInstance();
+	public static final String TEAM_INVENTORY_NAME = "§6Wähle dein Team!";
 
-	public GameTeam(Map map, String name, String prefix, byte colorData)
+	public GameTeam(String name, String prefix, byte colorData)
 	{
 		this.name = name.toUpperCase();
 		this.prefix = prefix;
 		this.colorData = colorData;
-		this.players = new ArrayList<String>();
-		this.maxPlayers = BWMain.getInstance().getConfig().getInt("Maps." + map.getName() + ".maxplayerperteam");
+		this.members = new ArrayList<String>();
 	}
 
 	public String getName()
@@ -41,34 +40,19 @@ public class GameTeam
 		return maxPlayers;
 	}
 
-	public static ArrayList<GameTeam> getTeams(Map map)
-	{
-		ArrayList<GameTeam> teams = new ArrayList<GameTeam>();
-		for (String key : plugin.getConfig().getConfigurationSection("Maps." + map.getName().toUpperCase() + ".teams")
-				.getKeys(false))
-		{
-			GameTeam team = new GameTeam(map, plugin.getConfig().getString(key),
-					plugin.getConfig().getString(key + ".prefix"),
-					(byte) (plugin.getConfig().getInt(key + ".colordata")));
-			teams.add(team);
-		}
-
-		return teams;
-	}
-
 	public String getPrefix()
 	{
 		return prefix;
 	}
 
-	public ArrayList<String> getPlayers()
+	public ArrayList<String> getMembers()
 	{
-		return players;
+		return members;
 	}
 
-	public boolean isMember(Player p)
+	public boolean hasMember(Player p)
 	{
-		return players.contains(p.getDisplayName());
+		return members.contains(p.getName());
 	}
 
 	public ItemStack getIcon()
@@ -76,6 +60,11 @@ public class GameTeam
 		ItemStack is = new ItemStack(Material.WOOL, 1, colorData);
 		ItemMeta meta = is.getItemMeta();
 		meta.setDisplayName(prefix + name);
+		ArrayList<String> players = new ArrayList<String>();
+		for (String player : members)
+		{
+			players.add("§7- " + getPrefix().replaceAll("&", "§") + player);
+		}
 		meta.setLore(players);
 		is.setItemMeta(meta);
 
@@ -87,14 +76,11 @@ public class GameTeam
 		this.maxPlayers = maxPlayers;
 	}
 
-	public void addTeam(Map map)
+	public void addTeam()
 	{
-		plugin.getConfig().set("Maps." + map.getName() + ".teams." + name + ".name", name.toUpperCase());
-		plugin.getConfig().set("Maps." + map.getName().toUpperCase() + ".teams." + getName().toUpperCase() + ".prefix",
-				getPrefix());
-		plugin.getConfig().set(
-				"Maps." + map.getName().toUpperCase() + ".teams." + getName().toUpperCase() + ".colordata",
-				getColorData());
+		plugin.getConfig().set("Teams." + name + ".name", name.toUpperCase());
+		plugin.getConfig().set("Teams." + getName().toUpperCase() + ".prefix", getPrefix());
+		plugin.getConfig().set("Teams." + getName().toUpperCase() + ".colordata", getColorData());
 		plugin.saveCfg(plugin.getConfig(), plugin.file);
 	}
 
@@ -103,15 +89,21 @@ public class GameTeam
 		return colorData;
 	}
 
-	public boolean exists(Map map)
+	public boolean exists()
 	{
-		return (plugin.getConfig()
-				.get("Maps." + map.getName().toUpperCase() + ".teams." + this.getName().toUpperCase()) != null);
+		return (plugin.getConfig().get("Teams." + this.getName().toUpperCase()) != null);
 	}
 
-	public void delete(Map map)
+	public void delete()
 	{
-		plugin.getConfig().set("Maps." + map.getName().toUpperCase() + ".teams." + getName().toUpperCase(), null);
+		plugin.getConfig().set("Teams." + getName().toUpperCase(), null);
+		plugin.saveConfig();
+	}
+
+	public void deleteSpawn(Map map)
+	{
+		plugin.getConfig().set("Maps." + map.getName().toUpperCase() + ".teams." + getName().toUpperCase() + ".spawn",
+				null);
 		plugin.saveConfig();
 	}
 
@@ -127,5 +119,40 @@ public class GameTeam
 		plugin.getConfig().set("Maps." + map.getName().toUpperCase() + ".teams." + name + ".spawn.world",
 				spawn.getWorld().getName());
 		plugin.saveConfig();
+	}
+
+	/*
+	 * public void addMember(Player p) { if (!(isMember(p))) { for (GameTeam team :
+	 * Utils.getTeams()) { team.removeMember(p); }
+	 * 
+	 * members.add(p.getName()); p.sendMessage(BWMain.prefix + "§aDu bist dem Team "
+	 * + getPrefix().replaceAll("&", "§") + getName() + " §abeigetreten!"); } }
+	 */
+
+	public void addMember(Player p)
+	{
+		if (!hasMember(p))
+		{
+			for (GameTeam team : Utils.getTeams())
+			{
+				team.removeMember(p);
+			}
+
+			members.add(p.getName());
+		} else
+		{
+			p.sendMessage(BWMain.prefix + "§cDu bist schon in diesem Team!");
+		}
+	}
+
+	public void removeMember(Player p)
+	{
+		if (hasMember(p))
+			members.remove(p.getName());
+	}
+
+	public Location getSpawn()
+	{
+		return spawn;
 	}
 }

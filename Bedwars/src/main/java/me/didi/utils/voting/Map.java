@@ -38,6 +38,7 @@ public class Map
 	public void delete()
 	{
 		plugin.getConfig().set("Maps." + this.name, null);
+		plugin.saveConfig();
 	}
 
 	public boolean playable()

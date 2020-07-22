@@ -5,14 +5,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import me.didi.commands.BWCommand;
 import me.didi.listener.PlayerListener;
+import me.didi.listener.WorldLoadListener;
+import me.didi.utils.GameTeam;
+import me.didi.utils.Utils;
 import me.didi.utils.gamestates.GameState;
 import me.didi.utils.gamestates.GameStateManager;
 import me.didi.utils.voting.Map;
@@ -27,22 +34,25 @@ public class BWMain extends JavaPlugin
 	FileConfiguration cfg = this.getConfig();
 	FileConfiguration mysqlcfg = YamlConfiguration.loadConfiguration(mysqlfile);
 	private static BWMain instance;
-	public int min_players, max_players;
+	private int min_players, max_players, maxplayerperteam;
 	private Voting voting;
 	private ArrayList<Map> maps;
 	private GameStateManager gameStateManager;
 	private ArrayList<Player> players;
+	private Inventory teamInventory;
+	private Utils utils;
 
 	@Override
 	public void onEnable()
 	{
 		instance = this;
-		addConfigValues();
 		initFiles();
+		addConfigValues();
+		addMySQLDefaultValues();
 		initValues();
 		initVoting();
 		gameStateManager.setGameState(GameState.LOBBY_STATE);
-		addMySQLDefaultValues();
+		maxplayerperteam = getConfig().getInt("maxplayersperteam");
 		registerCommands();
 		registerEvents();
 
@@ -52,6 +62,7 @@ public class BWMain extends JavaPlugin
 	{
 		PluginManager pm = Bukkit.getPluginManager();
 		pm.registerEvents(new PlayerListener(instance), instance);
+		pm.registerEvents(new WorldLoadListener(), instance);
 	}
 
 	public void addMySQLDefaultValues()
@@ -70,29 +81,46 @@ public class BWMain extends JavaPlugin
 		getConfig().addDefault("finished", false);
 		getConfig().addDefault("maxplayer", 1);
 		getConfig().addDefault("minplayer", 0);
+		getConfig().addDefault("maxplayersperteam", 1);
 		saveConfig();
 	}
 
 	private void initVoting()
 	{
 		maps = new ArrayList<Map>();
-		for (String current : getConfig().getConfigurationSection("Maps").getKeys(false))
+		if (getConfig().contains("Maps"))
 		{
-			Bukkit.getConsoleSender().sendMessage(prefix + "forSchleife!");
-			Map map = new Map(this, current.toUpperCase());
-			if (map.playable())
+			for (String current : getConfig().getConfigurationSection("Maps").getKeys(false))
 			{
-				maps.add(map);
-				Bukkit.getConsoleSender().sendMessage(prefix + "§cEine Map wurde geaddet!");
-			} else
-			{
-				Bukkit.getConsoleSender().sendMessage(
-						BWMain.prefix + "§4Die Map " + map.getName() + " §cmuss noch eingerichtet werden!");
+				Map map = new Map(this, current.toUpperCase());
+				if (map.playable())
+				{
+					maps.add(map);
+				} else
+				{
+					Bukkit.getConsoleSender().sendMessage(
+							BWMain.prefix + "§4Die Map " + map.getName() + " §cmuss noch eingerichtet werden!");
+				}
 			}
-		}
-		if (maps.size() >= Voting.MAP_AMOUNT)
+			if (maps.size() >= Voting.MAP_AMOUNT)
+			{
+				voting = new Voting(this, maps);
+			}
+		} else
+			return;
+	}
+
+	public void openTeamInventory(Player p)
+	{
+		if (isFinished())
 		{
-			voting = new Voting(this, maps);
+			teamInventory = Bukkit.createInventory(null, 9, GameTeam.TEAM_INVENTORY_NAME);
+
+			for (GameTeam team : Utils.getTeams())
+			{
+				teamInventory.addItem(team.getIcon());
+			}
+			p.openInventory(teamInventory);
 		}
 	}
 
@@ -139,7 +167,16 @@ public class BWMain extends JavaPlugin
 	@Override
 	public void onDisable()
 	{
-
+		for (World w : Bukkit.getWorlds())
+		{
+			for (Entity e : w.getEntities())
+			{
+				if (e.getType().equals(EntityType.DROPPED_ITEM))
+				{
+					e.remove();
+				}
+			}
+		}
 	}
 
 	private void initValues()
@@ -148,6 +185,7 @@ public class BWMain extends JavaPlugin
 		max_players = getConfig().getInt("maxplayer");
 		gameStateManager = new GameStateManager(instance);
 		players = new ArrayList<Player>();
+		utils = new Utils(BWMain.getInstance());
 	}
 
 	public void registerCommands()
@@ -174,9 +212,24 @@ public class BWMain extends JavaPlugin
 	{
 		return gameStateManager;
 	}
-	
+
 	public ArrayList<Player> getPlayers()
 	{
 		return players;
+	}
+
+	public int getMin_players()
+	{
+		return min_players;
+	}
+
+	public int getMax_players()
+	{
+		return max_players;
+	}
+
+	public int getMaxplayerperteam()
+	{
+		return maxplayerperteam;
 	}
 }

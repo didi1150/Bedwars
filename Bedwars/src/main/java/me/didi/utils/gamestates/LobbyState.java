@@ -1,11 +1,13 @@
 package me.didi.utils.gamestates;
 
+import me.didi.BWMain;
 import me.didi.utils.countdowns.LobbyCountDown;
 
 public class LobbyState extends GameState
 {
 
 	private LobbyCountDown countDown;
+	BWMain plugin = BWMain.getInstance();
 
 	public LobbyState(GameStateManager gameStateManager)
 	{
@@ -23,7 +25,7 @@ public class LobbyState extends GameState
 	{
 
 	}
-	
+
 	public LobbyCountDown getCountDown()
 	{
 		return countDown;

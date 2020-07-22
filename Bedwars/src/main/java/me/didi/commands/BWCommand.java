@@ -2,6 +2,7 @@ package me.didi.commands;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.WorldCreator;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,10 +15,15 @@ import me.didi.utils.GameTeam;
 import me.didi.utils.SpawnCategory;
 import me.didi.utils.Spawner;
 import me.didi.utils.Utils;
+import me.didi.utils.countdowns.LobbyCountDown;
+import me.didi.utils.gamestates.LobbyState;
 import me.didi.utils.voting.Map;
 
 public class BWCommand implements CommandExecutor
 {
+
+	BWMain plugin = BWMain.getInstance();
+	public static int START_SECONDS = 15;
 
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
 	{
@@ -47,27 +53,21 @@ public class BWCommand implements CommandExecutor
 
 					} else if (args[0].equalsIgnoreCase("addteam"))
 					{
-						if (args.length == 5)
+						if (args.length == 4)
 						{
 							try
 							{
-								Map map = new Map(BWMain.getInstance(), args[1]);
-								if (map.exists())
+								GameTeam team = new GameTeam(args[1].toUpperCase(), args[2], Byte.parseByte(args[3]));
+								if (!team.exists())
 								{
-									GameTeam team = new GameTeam(new Map(BWMain.getInstance(), args[1].toUpperCase()),
-											args[2].toUpperCase(), args[3], Byte.parseByte(args[4]));
-									if (!team.exists(map))
-									{
-										team.addTeam(new Map(BWMain.getInstance(), args[1].toUpperCase()));
-										p.sendMessage(BWMain.prefix + "§aDu hast erfolgreich das Team "
-												+ args[3].toUpperCase().replaceAll("&", "§") + args[2].toUpperCase()
-												+ " §aerfolgreich zur Map §6" + map.getName() + " §ageaddet!");
-									} else
-										p.sendMessage(BWMain.prefix + "§cDas Team existiert schon!");
+									Bukkit.broadcastMessage("adden!");
+									team.addTeam();
+									p.sendMessage(BWMain.prefix + "§aDu hast erfolgreich das Team "
+											+ args[2].toUpperCase().replaceAll("&", "§") + args[1].toUpperCase()
+											+ " §aerfolgreich geaddet!");
 								} else
-								{
-									p.sendMessage(BWMain.prefix + "§cDie Map §6" + args[0] + " §cexistiert nicht!");
-								}
+									p.sendMessage(BWMain.prefix + "§cDas Team existiert schon!");
+
 							} catch (NumberFormatException e)
 							{
 								p.sendMessage(BWMain.prefix + "§cBitte gib gültige Ziffern ein!");
@@ -85,10 +85,10 @@ public class BWCommand implements CommandExecutor
 							Map map = new Map(BWMain.getInstance(), args[1]);
 							if (map.exists())
 							{
-								GameTeam team = Utils.getTeam(map, args[2]);
-								if (team.exists(map))
+								GameTeam team = Utils.getTeam(args[2]);
+								if (team.exists())
 								{
-									team.delete(map);
+									team.delete();
 									p.sendMessage(BWMain.prefix + "§aDu hast das Team " + team.getPrefix()
 											+ team.getName() + " §aerfolgreich gelöscht!");
 								} else
@@ -139,45 +139,51 @@ public class BWCommand implements CommandExecutor
 							p.sendMessage(BWMain.prefix + "§cBitte verwende §6/edit!");
 					} else if (args[0].equalsIgnoreCase("createSpawner"))
 					{
-						if (args.length == 5)
+						if (args.length == 4)
 						{
-							Map map = new Map(BWMain.getInstance(), args[1]);
+							Map map = new Map(plugin, args[1]);
 							if (args[3].equalsIgnoreCase("IRON"))
 							{
-								Spawner spawner = new Spawner(map, p.getLocation(), Integer.parseInt(args[2]),
-										SpawnCategory.IRON, Integer.parseInt(args[4]));
-								if (spawner.exists())
-								{
-									spawner.addSpawner(map);
-								} else
-									p.sendMessage(BWMain.getInstance() + "§cDer Spawner mit der ID §6" + args[2]
-											+ " §cexistiert schon!");
+								int count = 0;
+
+								if (plugin.getConfig().contains("Locations." + map.getName() + ".IronCount"))
+									count = plugin.getConfig().getInt("Locations." + map.getName() + ".IronCount");
+
+								plugin.getConfig().set("Locations." + map.getName() + ".IronCount", (count + 1));
+								plugin.saveConfig();
+								Spawner spawner = new Spawner(p.getLocation(), Integer.parseInt(args[2]));
+								Utils.setBlockLocation(map, spawner.getLocation(), "IRONSPAWNER-" + (count + 1));
+								p.sendMessage(BWMain.prefix + "§aDu hast einen Iron-Spawner erstellt!");
 							}
 							if (args[3].equalsIgnoreCase("GOLD"))
 							{
-								Spawner spawner = new Spawner(map, p.getLocation(), Integer.parseInt(args[2]),
-										SpawnCategory.GOLD, Integer.parseInt(args[4]));
-								if (spawner.exists())
-								{
-									spawner.addSpawner(map);
-								} else
-									p.sendMessage(BWMain.getInstance() + "§cDer Spawner mit der ID §6" + args[2]
-											+ " §cexistiert schon!");
+								int count = 0;
+
+								if (plugin.getConfig().contains("Locations." + map.getName() + ".GoldCount"))
+									count = plugin.getConfig().getInt("Locations." + map.getName() + ".GoldCount");
+
+								plugin.getConfig().set("Locations." + map.getName() + ".GoldCount", (count + 1));
+								plugin.saveConfig();
+								Spawner spawner = new Spawner(p.getLocation(), Integer.parseInt(args[2]));
+								Utils.setBlockLocation(map, spawner.getLocation(), "GOLDSPAWNER-" + (count + 1));
+								p.sendMessage(BWMain.prefix + "§aDu hast einen Gold-Spawner erstellt!");
 							}
 							if (args[3].equalsIgnoreCase("EMERALD"))
 							{
-								Spawner spawner = new Spawner(map, p.getLocation(), Integer.parseInt(args[2]),
-										SpawnCategory.EMERALD, Integer.parseInt(args[4]));
-								if (spawner.exists())
-								{
-									spawner.addSpawner(map);
-								} else
-									p.sendMessage(BWMain.getInstance() + "§cDer Spawner mit der ID §6" + args[2]
-											+ " §cexistiert schon!");
+								int count = 0;
+
+								if (plugin.getConfig().contains("Locations." + map.getName() + ".EmeraldCount"))
+									count = plugin.getConfig().getInt("Locations." + map.getName() + ".EmeraldCount");
+
+								plugin.getConfig().set("Locations." + map.getName() + ".EmeraldCount", (count + 1));
+								plugin.saveConfig();
+								Spawner spawner = new Spawner(p.getLocation(), Integer.parseInt(args[2]));
+								Utils.setBlockLocation(map, spawner.getLocation(), "EMERALDSPAWNER-" + (count + 1));
+								p.sendMessage(BWMain.prefix + "§aDu hast einen Emerald-Spawner erstellt!");
 							}
 						} else
 							p.sendMessage(BWMain.getInstance()
-									+ "§cBitte verwende §6/bw createSpawner <map> <delay> <IRON || GOLD || EMERALD> <ID>§c!");
+									+ "§cBitte verwende §6/bw createSpawner <map> <delay> <IRON || GOLD || EMERALD> §c!");
 					} else if (args[0].equalsIgnoreCase("setSpectatorSpawn"))
 					{
 						if (args.length == 2)
@@ -196,8 +202,8 @@ public class BWCommand implements CommandExecutor
 							Map map = new Map(BWMain.getInstance(), args[1]);
 							if (map.exists())
 							{
-								GameTeam t = Utils.getTeam(map, args[2]);
-								if (t.exists(map))
+								GameTeam t = Utils.getTeam(args[2]);
+								if (t.exists())
 								{
 									t.setSpawn(map, p.getLocation());
 									p.sendMessage(BWMain.prefix + "§aDu hast erfolgreich den Spawn von Team "
@@ -208,6 +214,18 @@ public class BWCommand implements CommandExecutor
 								p.sendMessage(BWMain.prefix + "§cDie Map existiert nicht!");
 						} else
 							p.sendMessage(BWMain.prefix + "§cVerwende §6/bw setspawn <map> <team>!");
+					} else if (args[0].equalsIgnoreCase("start"))
+					{
+						if (plugin.getGameStateManager().getCurrentGameState() instanceof LobbyState)
+						{
+							LobbyState lobbyState = (LobbyState) plugin.getGameStateManager().getCurrentGameState();
+							if (lobbyState.getCountDown().isRunning() && lobbyState.getCountDown().getSeconds() > 15)
+							{
+								lobbyState.getCountDown().setSeconds(START_SECONDS);
+								p.sendMessage(BWMain.prefix + "§aDer CountDown wurde verkürzt.");
+							}
+						} else
+							p.sendMessage(BWMain.prefix + "§cDas Spiel hat schon gestartet!");
 					}
 				}
 			}

@@ -1,6 +1,7 @@
 package me.didi.listener;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -9,11 +10,14 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
 import me.didi.BWMain;
+import me.didi.utils.GameTeam;
 import me.didi.utils.ItemBuilder;
+import me.didi.utils.Utils;
 import me.didi.utils.countdowns.LobbyCountDown;
 import me.didi.utils.gamestates.LobbyState;
 import me.didi.utils.voting.Voting;
@@ -22,6 +26,8 @@ public class PlayerListener implements Listener
 {
 
 	private ItemStack vote;
+	private ItemStack team;
+	private ItemStack back;
 	private BWMain plugin;
 	private Voting voting = BWMain.getInstance().getVoting();
 
@@ -29,6 +35,8 @@ public class PlayerListener implements Listener
 	{
 		this.plugin = plugin;
 		this.vote = new ItemBuilder(Material.PAPER).setDisplayName(Voting.VOTING_INVENTORY_STRING).build();
+		this.team = new ItemBuilder(Material.BED).setDisplayName(GameTeam.TEAM_INVENTORY_NAME).build();
+		this.back = new ItemBuilder(Material.SLIME_BALL).setDisplayName("§cLobby").build();
 	}
 
 	@EventHandler
@@ -41,13 +49,27 @@ public class PlayerListener implements Listener
 				Player p = e.getPlayer();
 				p.getInventory().clear();
 				p.getInventory().setItem(1, vote);
+				p.getInventory().setItem(0, team);
+				p.getInventory().setItem(8, back);
 				p.setLevel(0);
+				p.setHealth(p.getMaxHealth());
+				p.setFoodLevel(20);
 				plugin.getPlayers().add(p);
-				e.setJoinMessage(BWMain.prefix + p.getName() + " §ahat das Spiel betreten! §r[§6"
-						+ Bukkit.getOnlinePlayers().size() + "§7/§6" + plugin.min_players + "§r]");
+				p.setGameMode(GameMode.ADVENTURE);
+				Utils.addToRandomTeam(p);
+				for (GameTeam team : Utils.getTeams())
+				{
+					if (team.hasMember(p))
+					{
+						e.setJoinMessage(BWMain.prefix + team.getPrefix().replaceAll("&", "§") + p.getName()
+								+ " §ahat das Spiel betreten! §r[§6" + Bukkit.getOnlinePlayers().size() + "§7/§6"
+								+ plugin.getMin_players() + "§r]");
+						break;
+					}
+				}
 				LobbyState lobbyState = (LobbyState) plugin.getGameStateManager().getCurrentGameState();
 				LobbyCountDown lobbyCountDown = lobbyState.getCountDown();
-				if (plugin.getPlayers().size() >= plugin.min_players)
+				if (plugin.getPlayers().size() >= plugin.getMin_players())
 				{
 					if (!lobbyCountDown.isRunning())
 					{
@@ -72,8 +94,14 @@ public class PlayerListener implements Listener
 				{
 					p.openInventory(voting.getVotingInventory());
 
-				} else
-					return;
+				} else if (e.getItem().getType().equals(Material.BED))
+				{
+					plugin.openTeamInventory(p);
+				} else if (e.getItem().getType().equals(Material.SLIME_BALL))
+				{
+					p.kickPlayer(null);
+				}
+
 			} else
 				return;
 
@@ -100,6 +128,30 @@ public class PlayerListener implements Listener
 
 				}
 			}
+
+			if (e.getClickedInventory().getTitle().equalsIgnoreCase(GameTeam.TEAM_INVENTORY_NAME))
+			{
+				for (GameTeam team : Utils.getTeams())
+				{
+					e.setCancelled(true);
+					if (e.getCurrentItem().getItemMeta().getDisplayName()
+							.equalsIgnoreCase(team.getPrefix().replaceAll("&", "§") + team.getName()))
+					{
+						if (team.getMembers().size() < plugin.getMaxplayerperteam())
+						{
+							team.addMember(p);
+							p.closeInventory();
+							p.sendMessage(BWMain.prefix + "§aDu bist dem Team " + team.getPrefix().replaceAll("&", "§")
+									+ team.getName() + " §abeigetreten!");
+						} else
+						{
+							p.closeInventory();
+							p.sendMessage(BWMain.prefix + "§cDas Team ist voll!");
+						}
+					}
+
+				}
+			}
 		}
 	}
 
@@ -113,10 +165,10 @@ public class PlayerListener implements Listener
 				Player p = e.getPlayer();
 				plugin.getPlayers().remove(p);
 				e.setQuitMessage(BWMain.prefix + p.getName() + " §chat das Spiel verlassen! §r[§6"
-						+ plugin.getPlayers().size() + "§7/§6" + plugin.min_players + "§r]");
+						+ plugin.getPlayers().size() + "§7/§6" + plugin.getMin_players() + "§r]");
 				LobbyState lobbyState = (LobbyState) plugin.getGameStateManager().getCurrentGameState();
 				LobbyCountDown lobbyCountDown = lobbyState.getCountDown();
-				if (plugin.getPlayers().size() < plugin.min_players)
+				if (plugin.getPlayers().size() < plugin.getMin_players())
 				{
 					if (lobbyCountDown.isRunning())
 					{

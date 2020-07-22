@@ -23,6 +23,7 @@ public class Voting
 	private HashMap<String, Integer> playerVotes;
 	private Inventory votingInventory;
 	private int[] votingInventoryOrder = new int[] { 3, 5 };
+	private Map winnerMap;
 
 	public Voting(BWMain plugin, ArrayList<Map> maps)
 	{
@@ -47,7 +48,6 @@ public class Voting
 	public void initVotingInventory()
 	{
 		votingInventory = Bukkit.createInventory(null, 9, Voting.VOTING_INVENTORY_STRING);
-		Bukkit.getConsoleSender().sendMessage("HIIII!!!");
 
 		for (int i = 0; i < votingMaps.length; i++)
 		{
@@ -63,7 +63,7 @@ public class Voting
 
 	public Map getWinnerMap()
 	{
-		Map winnerMap = votingMaps[0];
+		winnerMap = votingMaps[0];
 		for (int i = 1; i < votingMaps.length; i++)
 		{
 			if (votingMaps[i].getVotes() >= winnerMap.getVotes())
@@ -106,6 +106,11 @@ public class Voting
 	public Map[] getVotingMaps()
 	{
 		return votingMaps;
+	}
+	
+	public void setWinnerMap(Map winnerMap)
+	{
+		this.winnerMap = winnerMap;
 	}
 
 }
