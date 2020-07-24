@@ -52,7 +52,7 @@ public class PlayerListener implements Listener
 				p.getInventory().setItem(0, team);
 				p.getInventory().setItem(8, back);
 				p.setLevel(0);
-				p.setHealth(p.getMaxHealth());
+				p.setHealth(20);
 				p.setFoodLevel(20);
 				plugin.getPlayers().add(p);
 				p.setGameMode(GameMode.ADVENTURE);
@@ -94,7 +94,7 @@ public class PlayerListener implements Listener
 				{
 					p.openInventory(voting.getVotingInventory());
 
-				} else if (e.getItem().getType().equals(Material.BED))
+				} else if (e.getItem().getType().equals(Material.WHITE_BED))
 				{
 					plugin.openTeamInventory(p);
 				} else if (e.getItem().getType().equals(Material.SLIME_BALL))
@@ -116,7 +116,7 @@ public class PlayerListener implements Listener
 		{
 
 			e.setCancelled(true);
-			if (e.getClickedInventory().getTitle().equalsIgnoreCase(Voting.VOTING_INVENTORY_STRING))
+			if (e.getView().getTitle().equalsIgnoreCase(Voting.VOTING_INVENTORY_STRING))
 			{
 				for (int i = 0; i < voting.getVotingInventoryOrder().length; i++)
 				{
@@ -129,7 +129,7 @@ public class PlayerListener implements Listener
 				}
 			}
 
-			if (e.getClickedInventory().getTitle().equalsIgnoreCase(GameTeam.TEAM_INVENTORY_NAME))
+			if (e.getView().getTitle().equalsIgnoreCase(GameTeam.TEAM_INVENTORY_NAME))
 			{
 				for (GameTeam team : Utils.getTeams())
 				{

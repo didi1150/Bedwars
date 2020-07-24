@@ -27,24 +27,39 @@
 	</build>
 	<repositories>
 		<repository>
-			<id>spigot-repo</id>
-			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-		</repository>
-		<repository>
 			<id>maven-repo</id>
 			<url>https://repo1.maven.org/maven2/</url>
+		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+		<repository>
+			<id>spigot-repo</id>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
 		</repository>
 	</repositories>
 	<dependencies>
 		<dependency>
+			<groupId>com.github.ConnorLinfoot</groupId>
+			<artifactId>TitleAPI</artifactId>
+			<version>1.7.6</version>
+		</dependency>
+		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
 			<version>1.8.8-R0.1-SNAPSHOT</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.github.didi1150</groupId>
 			<artifactId>CoinApi</artifactId>
 			<version>1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.azbh111</groupId>
+			<artifactId>craftbukkit-1.8.8</artifactId>
+			<version>R</version>
 		</dependency>
 	</dependencies>
 </project>

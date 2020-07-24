@@ -57,7 +57,7 @@ public class GameTeam
 
 	public ItemStack getIcon()
 	{
-		ItemStack is = new ItemStack(Material.WOOL, 1, colorData);
+		ItemStack is = new ItemStack(Material.WHITE_WOOL);
 		ItemMeta meta = is.getItemMeta();
 		meta.setDisplayName(prefix + name);
 		ArrayList<String> players = new ArrayList<String>();
