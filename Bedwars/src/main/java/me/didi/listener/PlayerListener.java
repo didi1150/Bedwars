@@ -10,7 +10,6 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -94,7 +93,7 @@ public class PlayerListener implements Listener
 				{
 					p.openInventory(voting.getVotingInventory());
 
-				} else if (e.getItem().getType().equals(Material.WHITE_BED))
+				} else if (e.getItem().getType().equals(Material.BED))
 				{
 					plugin.openTeamInventory(p);
 				} else if (e.getItem().getType().equals(Material.SLIME_BALL))

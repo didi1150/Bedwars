@@ -42,7 +42,7 @@ public class GameTeam
 
 	public String getPrefix()
 	{
-		return prefix;
+		return prefix.replaceAll("&", "§");
 	}
 
 	public ArrayList<String> getMembers()
@@ -57,18 +57,23 @@ public class GameTeam
 
 	public ItemStack getIcon()
 	{
-		ItemStack is = new ItemStack(Material.WHITE_WOOL);
+		ItemStack is = new ItemStack(Material.WOOL, 1, colorData);
 		ItemMeta meta = is.getItemMeta();
 		meta.setDisplayName(prefix + name);
 		ArrayList<String> players = new ArrayList<String>();
 		for (String player : members)
 		{
-			players.add("§7- " + getPrefix().replaceAll("&", "§") + player);
+			players.add("§7- " + getPrefix() + player);
 		}
 		meta.setLore(players);
 		is.setItemMeta(meta);
 
 		return is;
+	}
+
+	public boolean isEmpty()
+	{
+		return members.isEmpty();
 	}
 
 	public void setMaxPlayers(int maxPlayers)
@@ -120,14 +125,6 @@ public class GameTeam
 				spawn.getWorld().getName());
 		plugin.saveConfig();
 	}
-
-	/*
-	 * public void addMember(Player p) { if (!(isMember(p))) { for (GameTeam team :
-	 * Utils.getTeams()) { team.removeMember(p); }
-	 * 
-	 * members.add(p.getName()); p.sendMessage(BWMain.prefix + "§aDu bist dem Team "
-	 * + getPrefix().replaceAll("&", "§") + getName() + " §abeigetreten!"); } }
-	 */
 
 	public void addMember(Player p)
 	{

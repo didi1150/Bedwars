@@ -105,6 +105,7 @@ public class BWMain extends JavaPlugin
 			if (maps.size() >= Voting.MAP_AMOUNT)
 			{
 				voting = new Voting(this, maps);
+				utils.setVoting(voting);
 			}
 		} else
 			return;
