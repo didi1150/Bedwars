@@ -16,7 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import me.didi.BWMain;
 import me.didi.utils.GameTeam;
 import me.didi.utils.ItemBuilder;
-import me.didi.utils.Utils;
+import me.didi.utils.GameManager;
 import me.didi.utils.countdowns.LobbyCountDown;
 import me.didi.utils.gamestates.LobbyState;
 import me.didi.utils.voting.Voting;
@@ -28,7 +28,8 @@ public class PlayerListener implements Listener
 	private ItemStack team;
 	private ItemStack back;
 	private BWMain plugin;
-	private Voting voting = BWMain.getInstance().getVoting();
+	private Voting voting;
+	private GameManager gameManager;
 
 	public PlayerListener(BWMain plugin)
 	{
@@ -36,6 +37,8 @@ public class PlayerListener implements Listener
 		this.vote = new ItemBuilder(Material.PAPER).setDisplayName(Voting.VOTING_INVENTORY_STRING).build();
 		this.team = new ItemBuilder(Material.BED).setDisplayName(GameTeam.TEAM_INVENTORY_NAME).build();
 		this.back = new ItemBuilder(Material.SLIME_BALL).setDisplayName("§cLobby").build();
+		this.gameManager = plugin.getGameManager();
+		this.voting = plugin.getVoting();
 	}
 
 	@EventHandler
@@ -55,8 +58,8 @@ public class PlayerListener implements Listener
 				p.setFoodLevel(20);
 				plugin.getPlayers().add(p);
 				p.setGameMode(GameMode.ADVENTURE);
-				Utils.addToRandomTeam(p);
-				for (GameTeam team : Utils.getTeams())
+				gameManager.addToRandomTeam(p);
+				for (GameTeam team : gameManager.getTeams())
 				{
 					if (team.hasMember(p))
 					{
@@ -130,7 +133,7 @@ public class PlayerListener implements Listener
 
 			if (e.getView().getTitle().equalsIgnoreCase(GameTeam.TEAM_INVENTORY_NAME))
 			{
-				for (GameTeam team : Utils.getTeams())
+				for (GameTeam team : gameManager.getTeams())
 				{
 					e.setCancelled(true);
 					if (e.getCurrentItem().getItemMeta().getDisplayName()

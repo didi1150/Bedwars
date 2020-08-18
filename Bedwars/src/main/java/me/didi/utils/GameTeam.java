@@ -2,7 +2,6 @@ package me.didi.utils;
 
 import java.util.ArrayList;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -21,6 +20,7 @@ public class GameTeam
 	private Location spawn;
 	static BWMain plugin = BWMain.getInstance();
 	public static final String TEAM_INVENTORY_NAME = "§6Wähle dein Team!";
+	private GameManager gameManager;
 
 	public GameTeam(String name, String prefix, byte colorData)
 	{
@@ -28,6 +28,7 @@ public class GameTeam
 		this.prefix = prefix;
 		this.colorData = colorData;
 		this.members = new ArrayList<String>();
+		this.gameManager = plugin.getGameManager();
 	}
 
 	public String getName()
@@ -81,7 +82,7 @@ public class GameTeam
 		this.maxPlayers = maxPlayers;
 	}
 
-	public void addTeam()
+	public void create()
 	{
 		plugin.getConfig().set("Teams." + name + ".name", name.toUpperCase());
 		plugin.getConfig().set("Teams." + getName().toUpperCase() + ".prefix", getPrefix());
@@ -130,7 +131,7 @@ public class GameTeam
 	{
 		if (!hasMember(p))
 		{
-			for (GameTeam team : Utils.getTeams())
+			for (GameTeam team : gameManager.getTeams())
 			{
 				team.removeMember(p);
 			}

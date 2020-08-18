@@ -14,7 +14,7 @@ import me.didi.BWMain;
 import me.didi.utils.GameTeam;
 import me.didi.utils.SpawnCategory;
 import me.didi.utils.Spawner;
-import me.didi.utils.Utils;
+import me.didi.utils.GameManager;
 import me.didi.utils.countdowns.LobbyCountDown;
 import me.didi.utils.gamestates.LobbyState;
 import me.didi.utils.voting.Map;
@@ -24,6 +24,7 @@ public class BWCommand implements CommandExecutor
 
 	BWMain plugin = BWMain.getInstance();
 	public static int START_SECONDS = 15;
+	GameManager gameManager = plugin.getGameManager();
 
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
 	{
@@ -61,7 +62,7 @@ public class BWCommand implements CommandExecutor
 								if (!team.exists())
 								{
 									Bukkit.broadcastMessage("adden!");
-									team.addTeam();
+									team.create();
 									p.sendMessage(BWMain.prefix + "§aDu hast erfolgreich das Team "
 											+ args[2].toUpperCase().replaceAll("&", "§") + args[1].toUpperCase()
 											+ " §aerfolgreich geaddet!");
@@ -85,7 +86,7 @@ public class BWCommand implements CommandExecutor
 							Map map = new Map(BWMain.getInstance(), args[1]);
 							if (map.exists())
 							{
-								GameTeam team = Utils.getTeam(args[2]);
+								GameTeam team = gameManager.getTeam(args[2]);
 								if (team.exists())
 								{
 									team.delete();
@@ -152,7 +153,7 @@ public class BWCommand implements CommandExecutor
 								plugin.getConfig().set("Locations." + map.getName() + ".IronCount", (count + 1));
 								plugin.saveConfig();
 								Spawner spawner = new Spawner(p.getLocation(), Integer.parseInt(args[2]));
-								Utils.setBlockLocation(map, spawner.getLocation(), "IRONSPAWNER-" + (count + 1));
+								gameManager.setBlockLocation(map, spawner.getLocation(), "IRONSPAWNER-" + (count + 1));
 								p.sendMessage(BWMain.prefix + "§aDu hast einen Iron-Spawner erstellt!");
 							}
 							if (args[3].equalsIgnoreCase("GOLD"))
@@ -165,7 +166,7 @@ public class BWCommand implements CommandExecutor
 								plugin.getConfig().set("Locations." + map.getName() + ".GoldCount", (count + 1));
 								plugin.saveConfig();
 								Spawner spawner = new Spawner(p.getLocation(), Integer.parseInt(args[2]));
-								Utils.setBlockLocation(map, spawner.getLocation(), "GOLDSPAWNER-" + (count + 1));
+								gameManager.setBlockLocation(map, spawner.getLocation(), "GOLDSPAWNER-" + (count + 1));
 								p.sendMessage(BWMain.prefix + "§aDu hast einen Gold-Spawner erstellt!");
 							}
 							if (args[3].equalsIgnoreCase("EMERALD"))
@@ -178,7 +179,7 @@ public class BWCommand implements CommandExecutor
 								plugin.getConfig().set("Locations." + map.getName() + ".EmeraldCount", (count + 1));
 								plugin.saveConfig();
 								Spawner spawner = new Spawner(p.getLocation(), Integer.parseInt(args[2]));
-								Utils.setBlockLocation(map, spawner.getLocation(), "EMERALDSPAWNER-" + (count + 1));
+								gameManager.setBlockLocation(map, spawner.getLocation(), "EMERALDSPAWNER-" + (count + 1));
 								p.sendMessage(BWMain.prefix + "§aDu hast einen Emerald-Spawner erstellt!");
 							}
 						} else
@@ -202,7 +203,7 @@ public class BWCommand implements CommandExecutor
 							Map map = new Map(BWMain.getInstance(), args[1]);
 							if (map.exists())
 							{
-								GameTeam t = Utils.getTeam(args[2]);
+								GameTeam t = gameManager.getTeam(args[2]);
 								if (t.exists())
 								{
 									t.setSpawn(map, p.getLocation());

@@ -1,8 +1,11 @@
 package me.didi.utils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -16,30 +19,106 @@ import org.bukkit.util.Vector;
 import me.didi.BWMain;
 import me.didi.utils.gamestates.GameState;
 import me.didi.utils.gamestates.GameStateManager;
-import me.didi.utils.gamestates.IngameState;
 import me.didi.utils.voting.Map;
 import me.didi.utils.voting.Voting;
 
-public class Utils
+public class GameManager
 {
 
-	private static BWMain plugin;
-	private static ArrayList<GameTeam> teams;
+	private BWMain plugin;
+	private ArrayList<GameTeam> teams;
+	private List<Map> maps;
 	private int[] teamsOrder = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
-	private static int taskID;
-	private static Voting voting;
-	private static GameStateManager gameStateManager;
+	private int taskID;
+	private Voting voting;
+	private GameStateManager gameStateManager;
+	private boolean running;
+	private String[] colors = new String[] { "AQUA", "BLACK", "BLUE", "DARK_GRAY", "DARK_GREEN", "GREEN", "VIOLETT",
+			"ORANGE", "PINK", "RED", "WHITE", "YELLOW", "GRAY", "DARK_RED", "DARK_BLUE" };
 
-	public Utils(BWMain plugin)
+	public GameManager(BWMain plugin)
 	{
-		Utils.plugin = plugin;
+		this.plugin = plugin;
 		teams = new ArrayList<GameTeam>();
+		maps = new ArrayList<Map>();
 		gameStateManager = plugin.getGameStateManager();
 
-		initTeams();
+		init();
 	}
 
-	public static GameTeam getTeam(String name)
+	public ChatColor getChatColor(String color)
+	{
+		if (color.equalsIgnoreCase("AQUA"))
+			return ChatColor.AQUA;
+		else if (color.equalsIgnoreCase("BLACK"))
+			return ChatColor.BLACK;
+		else if (color.equalsIgnoreCase("BLUE"))
+			return ChatColor.BLUE;
+		else if (color.equalsIgnoreCase("DARK_GRAY"))
+			return ChatColor.DARK_GRAY;
+		else if (color.equalsIgnoreCase("DARK_GREEN"))
+			return ChatColor.DARK_GREEN;
+		else if (color.equalsIgnoreCase("GREEN"))
+			return ChatColor.GREEN;
+		else if (color.equalsIgnoreCase("VIOLETT"))
+			return ChatColor.DARK_PURPLE;
+		else if (color.equalsIgnoreCase("ORANGE"))
+			return ChatColor.GOLD;
+		else if (color.equalsIgnoreCase("PINK"))
+			return ChatColor.LIGHT_PURPLE;
+		else if (color.equalsIgnoreCase("RED"))
+			return ChatColor.RED;
+		else if (color.equalsIgnoreCase("WHITE"))
+			return ChatColor.WHITE;
+		else if (color.equalsIgnoreCase("YELLOW"))
+			return ChatColor.YELLOW;
+		else if (color.equalsIgnoreCase("GRAY"))
+			return ChatColor.GRAY;
+		else if (color.equalsIgnoreCase("DARK_RED"))
+			return ChatColor.DARK_RED;
+		else if (color.equalsIgnoreCase("DARK_BLUE"))
+			return ChatColor.DARK_BLUE;
+		else
+			return null;
+	}
+
+	public DyeColor getDyeColor(String color)
+	{
+		if (color.equalsIgnoreCase("AQUA"))
+			return DyeColor.CYAN;
+		else if (color.equalsIgnoreCase("BLACK"))
+			return DyeColor.BLACK;
+		else if (color.equalsIgnoreCase("BLUE"))
+			return DyeColor.LIGHT_BLUE;
+		else if (color.equalsIgnoreCase("DARK_GRAY"))
+			return DyeColor.GRAY;
+		else if (color.equalsIgnoreCase("DARK_GREEN"))
+			return DyeColor.GREEN;
+		else if (color.equalsIgnoreCase("GREEN"))
+			return DyeColor.LIME;
+		else if (color.equalsIgnoreCase("VIOLETT"))
+			return DyeColor.PURPLE;
+		else if (color.equalsIgnoreCase("ORANGE"))
+			return DyeColor.ORANGE;
+		else if (color.equalsIgnoreCase("PINK"))
+			return DyeColor.MAGENTA;
+		else if (color.equalsIgnoreCase("RED"))
+			return DyeColor.RED;
+		else if (color.equalsIgnoreCase("WHITE"))
+			return DyeColor.WHITE;
+		else if (color.equalsIgnoreCase("YELLOW"))
+			return DyeColor.YELLOW;
+		else if (color.equalsIgnoreCase("GRAY"))
+			return DyeColor.SILVER;
+		else if (color.equalsIgnoreCase("DARK_RED"))
+			return DyeColor.BROWN;
+		else if (color.equalsIgnoreCase("DARK_BLUE"))
+			return DyeColor.BLUE;
+		else
+			return null;
+	}
+
+	public GameTeam getTeam(String name)
 	{
 		GameTeam team = new GameTeam(name.toUpperCase(),
 				plugin.getConfig().getString("Teams." + name.toUpperCase() + ".prefix"),
@@ -47,12 +126,12 @@ public class Utils
 		return team;
 	}
 
-	public static ArrayList<GameTeam> getTeams()
+	public ArrayList<GameTeam> getTeams()
 	{
 		return teams;
 	}
 
-	private void initTeams()
+	private void init()
 	{
 		ConfigurationSection section = plugin.getConfig().getConfigurationSection("Teams");
 		if (section != null)
@@ -69,6 +148,19 @@ public class Utils
 				}
 			}
 		}
+
+		section = plugin.getConfig().getConfigurationSection("Maps");
+		if (section != null)
+		{
+			for (String key : section.getKeys(false))
+			{
+				Map map = new Map(plugin, key);
+				if (!maps.contains(map))
+				{
+					maps.add(map);
+				}
+			}
+		}
 	}
 
 	public static void removeMember(Player p, GameTeam t)
@@ -82,7 +174,7 @@ public class Utils
 		return teamsOrder;
 	}
 
-	public static void addToRandomTeam(Player p)
+	public void addToRandomTeam(Player p)
 	{
 		for (GameTeam team : teams)
 		{
@@ -94,7 +186,7 @@ public class Utils
 		}
 	}
 
-	public static void setBlockLocation(Map map, Location loc, String name)
+	public void setBlockLocation(Map map, Location loc, String name)
 	{
 		plugin.getConfig().set("Maps." + map.getName() + "." + name + ".x", loc.getBlockX() + 0.5);
 		plugin.getConfig().set("Maps." + map.getName() + "." + name + ".y", loc.getBlockY());
@@ -103,7 +195,7 @@ public class Utils
 		plugin.saveConfig();
 	}
 
-	public static Location getBlockLocation(Map map, String name)
+	public Location getBlockLocation(Map map, String name)
 	{
 		String mainPath = "Maps." + map.getName() + "." + name;
 
@@ -112,7 +204,7 @@ public class Utils
 				plugin.getConfig().getDouble(mainPath + ".z")));
 	}
 
-	public static void setLocation(Map map, Location location, String name)
+	public void setLocation(Map map, Location location, String name)
 	{
 		FileConfiguration cfg = plugin.getConfig();
 		cfg.set("Maps." + map.getName() + "." + name + ".x", location.getX());
@@ -124,7 +216,7 @@ public class Utils
 		plugin.saveConfig();
 	}
 
-	public static void setTeamShop(Map map, GameTeam team, Player player)
+	public void setTeamShop(Map map, GameTeam team, Player player)
 	{
 		setLocation(map, player.getLocation(), "teams." + team.getName() + ".shop");
 		player.sendMessage(
@@ -132,7 +224,7 @@ public class Utils
 		plugin.saveConfig();
 	}
 
-	public static Location getTeamShop(Map map, GameTeam team)
+	public Location getTeamShop(Map map, GameTeam team)
 	{
 		FileConfiguration cfg = plugin.getConfig();
 		String mainPath = "Maps." + map.getName() + ".teams." + team.getName() + ".shop.";
@@ -140,9 +232,9 @@ public class Utils
 				cfg.getDouble(mainPath + "y"), cfg.getDouble(mainPath + "z"));
 	}
 
-	public static void startGame()
+	public void startGame()
 	{
-		for (GameTeam team : Utils.getTeams())
+		for (GameTeam team : getTeams())
 		{
 			final BWMain plugin = BWMain.getInstance();
 			final Map winnerMap = voting.getWinnerMap();
@@ -177,21 +269,22 @@ public class Utils
 				// TODO : Bed placen
 			}
 			gameStateManager.setGameState(GameState.INGAME_STATE);
+			running = true;
 
 			final World w = team.getSpawn().getWorld();
 			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable()
 			{
-				int delay = 0;
+				int i = 0;
 
 				public void run()
 				{
-					delay++;
-					if (gameStateManager.getCurrentGameState() instanceof IngameState)
+					i++;
+					if (running)
 					{
 						w.setThundering(false);
 						w.setStorm(false);
 						w.setTime(6000);
-						if ((delay == 15) || (delay == 30))
+						if ((i == 15) || (i == 30))
 						{
 							for (int i = 1; i <= plugin.getConfig()
 									.getInt("Locations." + winnerMap.getName() + ".GoldCount"); i++)
@@ -204,7 +297,7 @@ public class Utils
 								}
 							}
 						}
-						if (delay == 30)
+						if (i == 30)
 						{
 							for (int i = 1; i <= plugin.getConfig()
 									.getInt("Locations." + winnerMap.getName() + ".EmeraldCount"); i++)
@@ -214,10 +307,9 @@ public class Utils
 									Item item = w.dropItem(getBlockLocation(winnerMap, "EMERALDSPAWNER-" + i),
 											new ItemStack(Material.EMERALD));
 									item.setVelocity(new Vector(0, 0, 0));
-									break;
 								}
 							}
-							delay = 0;
+							i = 0;
 						}
 						for (int i = 1; i <= plugin.getConfig()
 								.getInt("Locations." + winnerMap.getName() + ".IronCount"); i++)
@@ -230,17 +322,31 @@ public class Utils
 							}
 						}
 					} else
-					{
 						Bukkit.getScheduler().cancelTask(taskID);
-					}
 
 				}
 			}, 20, 20);
 		}
 	}
 
+	public void addMap(Map map, String builder)
+	{
+		if (!map.exists())
+			map.create(builder);
+	}
+
 	public void setVoting(Voting voting)
 	{
-		Utils.voting = voting;
+		this.voting = voting;
+	}
+
+	public List<Map> getMaps()
+	{
+		return maps;
+	}
+	
+	public String[] getColors()
+	{
+		return colors;
 	}
 }

@@ -16,10 +16,11 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import me.didi.commands.BWCommand;
+import me.didi.commands.CommandManager;
 import me.didi.listener.PlayerListener;
 import me.didi.listener.WorldLoadListener;
 import me.didi.utils.GameTeam;
-import me.didi.utils.Utils;
+import me.didi.utils.GameManager;
 import me.didi.utils.gamestates.GameState;
 import me.didi.utils.gamestates.GameStateManager;
 import me.didi.utils.voting.Map;
@@ -40,7 +41,7 @@ public class BWMain extends JavaPlugin
 	private GameStateManager gameStateManager;
 	private ArrayList<Player> players;
 	private Inventory teamInventory;
-	private Utils utils;
+	private GameManager gameManager;
 
 	@Override
 	public void onEnable()
@@ -105,7 +106,7 @@ public class BWMain extends JavaPlugin
 			if (maps.size() >= Voting.MAP_AMOUNT)
 			{
 				voting = new Voting(this, maps);
-				utils.setVoting(voting);
+				gameManager.setVoting(voting);
 			}
 		} else
 			return;
@@ -117,7 +118,7 @@ public class BWMain extends JavaPlugin
 		{
 			teamInventory = Bukkit.createInventory(null, 9, GameTeam.TEAM_INVENTORY_NAME);
 
-			for (GameTeam team : Utils.getTeams())
+			for (GameTeam team : gameManager.getTeams())
 			{
 				teamInventory.addItem(team.getIcon());
 			}
@@ -186,12 +187,13 @@ public class BWMain extends JavaPlugin
 		max_players = getConfig().getInt("maxplayer");
 		gameStateManager = new GameStateManager(instance);
 		players = new ArrayList<Player>();
-		utils = new Utils(BWMain.getInstance());
+		gameManager = new GameManager(BWMain.getInstance());
 	}
 
 	public void registerCommands()
 	{
-		getCommand("bw").setExecutor(new BWCommand());
+		// getCommand("bw").setExecutor(new BWCommand());
+		getCommand("bw").setExecutor(new CommandManager(this));
 	}
 
 	public boolean isFinished()
@@ -232,5 +234,10 @@ public class BWMain extends JavaPlugin
 	public int getMaxplayerperteam()
 	{
 		return maxplayerperteam;
+	}
+
+	public GameManager getGameManager()
+	{
+		return gameManager;
 	}
 }

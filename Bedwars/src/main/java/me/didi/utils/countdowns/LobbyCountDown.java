@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 
 import me.didi.BWMain;
 import me.didi.utils.GameTeam;
-import me.didi.utils.Utils;
+import me.didi.utils.GameManager;
 import me.didi.utils.gamestates.GameState;
 import me.didi.utils.gamestates.GameStateManager;
 import me.didi.utils.voting.Map;
@@ -26,10 +26,12 @@ public class LobbyCountDown extends Countdown
 	private boolean isRunning;
 	private int seconds;
 	private Voting voting;
+	private GameManager gameManager;
 
 	public LobbyCountDown(GameStateManager gameStateManager)
 	{
 		this.gameStateManager = gameStateManager;
+		this.gameManager = gameStateManager.getPlugin().getGameManager();
 		seconds = COUNTDOWN_TIME;
 	}
 
@@ -76,8 +78,7 @@ public class LobbyCountDown extends Countdown
 						Bukkit.broadcastMessage(BWMain.prefix + "§aDas Spiel startet in §6einer §aSekunde!");
 						break;
 					case 0:
-
-						Utils.startGame();
+						gameManager.startGame();
 						break;
 				}
 				seconds--;
