@@ -14,13 +14,13 @@ import me.didi.utils.GameManager;
 import me.didi.utils.GameTeam;
 import me.didi.utils.voting.Map;
 
-public class DeleteCmd extends SubCommand
+public class SpawnCmd extends SubCommand
 {
 
 	BWMain plugin;
 	GameManager gameManager;
 
-	public DeleteCmd(BWMain plugin)
+	public SpawnCmd(BWMain plugin)
 	{
 		this.plugin = plugin;
 		this.gameManager = plugin.getGameManager();
@@ -29,47 +29,55 @@ public class DeleteCmd extends SubCommand
 	@Override
 	public String getName()
 	{
-		return "delete";
+		return "setspawn";
 	}
 
 	@Override
 	public String getDescription()
 	{
-		return "Löscht Teams/Maps";
+		return "Sets the spawn";
 	}
 
 	@Override
 	public String getSyntax()
 	{
-		return "/bw delete [team/map] <name>";
+		return "/bw setspawn team <name> <map> | /bw setspawn spectator <map> | /bw setspawn lobby";
 	}
 
 	@Override
 	public void execute(Player player, String[] args)
 	{
-		if (args.length == 3)
+		if (args.length > 1)
 		{
-			if (args[1].equalsIgnoreCase("team"))
+
+			if (args.length == 4)
 			{
+				Map map = new Map(plugin, args[3]);
 				GameTeam team = gameManager.getTeam(args[2]);
 				if (team.exists())
 				{
-					player.sendMessage(BWMain.prefix + ChatColor.GREEN + "Du hast erfolgreich das Team "
-							+ team.getPrefix() + team.getName() + ChatColor.GREEN + " gelöscht!");
-					team.delete();
-				} else
-					player.sendMessage(BWMain.prefix + ChatColor.RED + "Das Team existiert nicht!");
-			} else if (args[1].equalsIgnoreCase("map"))
+					team.saveSpawn(map, player.getLocation());
+					player.sendMessage(BWMain.prefix + ChatColor.GREEN + "Du hast den Spawn von Team "
+							+ team.getPrefix() + team.getName() + ChatColor.GREEN + " gesetzt!");
+				}
+			} else if (args.length == 3)
 			{
 				Map map = new Map(plugin, args[2]);
 				if (map.exists())
 				{
-					player.sendMessage(BWMain.prefix + ChatColor.GREEN + "Du hast erfolgreich die Map " + map.getName()
-							+ " gelöscht!");
-					map.delete();
-				} else
-					player.sendMessage(BWMain.prefix + ChatColor.RED + "Die Map existiert nicht!");
+					map.setSpectatorSpawnLocation(player.getLocation());
+					player.sendMessage(BWMain.prefix + ChatColor.GREEN + "Du hast den Spectator-Spawn von Team "
+							+ ChatColor.YELLOW + map.getName() + ChatColor.GREEN + " gesetzt!");
+				}
+			} else if (args.length == 2)
+			{
+				if (args[1].equalsIgnoreCase("lobby"))
+				{
+					gameManager.setLobby(player.getLocation());
+					player.sendMessage(BWMain.prefix + ChatColor.GREEN + "Du hast den Lobby-Spawn gesetzt!");
+				}
 			}
+
 		}
 	}
 
@@ -81,7 +89,8 @@ public class DeleteCmd extends SubCommand
 		if (args.length == 2)
 		{
 			list.add("team");
-			list.add("map");
+			list.add("spectator");
+			list.add("lobby");
 			StringUtil.copyPartialMatches(args[1], list, completions);
 			Collections.sort(completions);
 			return completions;
@@ -96,14 +105,26 @@ public class DeleteCmd extends SubCommand
 				StringUtil.copyPartialMatches(args[2], list, completions);
 				Collections.sort(completions);
 				return completions;
-			} else if (args[1].equalsIgnoreCase("map"))
+			} else if (args[1].equalsIgnoreCase("spectator"))
 			{
 				for (Map map : gameManager.getMaps())
 				{
 					list.add(map.getName());
 				}
-
 				StringUtil.copyPartialMatches(args[2], list, completions);
+				Collections.sort(completions);
+				return completions;
+			}
+
+		} else if (args.length == 4)
+		{
+			if (args[1].equalsIgnoreCase("team"))
+			{
+				for (Map map : gameManager.getMaps())
+				{
+					list.add(map.getName());
+				}
+				StringUtil.copyPartialMatches(args[3], list, completions);
 				Collections.sort(completions);
 				return completions;
 			}

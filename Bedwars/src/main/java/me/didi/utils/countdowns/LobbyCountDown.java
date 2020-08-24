@@ -4,14 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
+import org.bukkit.block.BlockFace;
 
 import me.didi.BWMain;
-import me.didi.utils.GameTeam;
 import me.didi.utils.GameManager;
-import me.didi.utils.gamestates.GameState;
+import me.didi.utils.GameTeam;
 import me.didi.utils.gamestates.GameStateManager;
 import me.didi.utils.voting.Map;
 import me.didi.utils.voting.Voting;
@@ -26,18 +23,17 @@ public class LobbyCountDown extends Countdown
 	private boolean isRunning;
 	private int seconds;
 	private Voting voting;
-	private GameManager gameManager;
 
 	public LobbyCountDown(GameStateManager gameStateManager)
 	{
 		this.gameStateManager = gameStateManager;
-		this.gameManager = gameStateManager.getPlugin().getGameManager();
 		seconds = COUNTDOWN_TIME;
 	}
 
 	@Override
 	public void start()
 	{
+		final GameManager gameManager = BWMain.getInstance().getGameManager();
 		isRunning = true;
 		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(gameStateManager.getPlugin(), new Runnable()
 		{
@@ -68,6 +64,15 @@ public class LobbyCountDown extends Countdown
 						voting.setWinnerMap(winningMap);
 						Bukkit.broadcastMessage(
 								BWMain.prefix + "§aDie Map §6" + winningMap.getName() + " §awurde gewählt!");
+						for (GameTeam gameTeam : gameManager.getAliveTeams())
+						{
+							gameTeam.setBedFacing(BlockFace.valueOf(BWMain.getInstance().getConfig().getString(
+									"Maps." + winningMap.getName() + ".teams." + gameTeam.getName() + ".bed.face")));
+							gameTeam.setBedHeadLocation(
+									gameManager.getLocation(winningMap, "teams." + gameTeam.getName() + ".bed"));
+							gameTeam.setSpawn(
+									gameManager.getLocation(winningMap, "teams." + gameTeam.getName() + ".spawn"));
+						}
 						break;
 					case 5:
 					case 3:
@@ -99,17 +104,20 @@ public class LobbyCountDown extends Countdown
 
 	public void startIdle()
 	{
-		isIdling = true;
-		idleID = Bukkit.getScheduler().scheduleSyncRepeatingTask(gameStateManager.getPlugin(), new Runnable()
+		if (BWMain.getInstance().isFinished())
 		{
-
-			public void run()
+			isIdling = true;
+			idleID = Bukkit.getScheduler().scheduleSyncRepeatingTask(gameStateManager.getPlugin(), new Runnable()
 			{
-				Bukkit.broadcastMessage(BWMain.prefix + "§eDas Spiel braucht noch §6"
-						+ (gameStateManager.getPlugin().getMin_players() - Bukkit.getOnlinePlayers().size())
-						+ " Spieler §ebis zum Spielstart!");
-			}
-		}, 0, 20 * 20);
+
+				public void run()
+				{
+					Bukkit.broadcastMessage(BWMain.prefix + "§eDas Spiel braucht noch §6"
+							+ (gameStateManager.getPlugin().getMin_players() - Bukkit.getOnlinePlayers().size())
+							+ " Spieler §ebis zum Spielstart!");
+				}
+			}, 0, 20 * 20);
+		}
 	}
 
 	public void stopIdle()

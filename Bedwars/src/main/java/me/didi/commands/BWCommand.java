@@ -206,7 +206,7 @@ public class BWCommand implements CommandExecutor
 								GameTeam t = gameManager.getTeam(args[2]);
 								if (t.exists())
 								{
-									t.setSpawn(map, p.getLocation());
+									t.saveSpawn(map, p.getLocation());
 									p.sendMessage(BWMain.prefix + "§aDu hast erfolgreich den Spawn von Team "
 											+ t.getPrefix().replaceAll("&", "§") + t.getName() + " §agesetzt!");
 								} else

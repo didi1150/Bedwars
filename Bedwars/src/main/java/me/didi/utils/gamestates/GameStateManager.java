@@ -16,7 +16,7 @@ public class GameStateManager
 
 		gameStates[GameState.LOBBY_STATE] = new LobbyState(this);
 		gameStates[GameState.INGAME_STATE] = new IngameState();
-		gameStates[GameState.ENDING_STATE] = new EndingState();
+		gameStates[GameState.ENDING_STATE] = new EndingState(plugin);
 	}
 
 	public void setGameState(int gameStateID)

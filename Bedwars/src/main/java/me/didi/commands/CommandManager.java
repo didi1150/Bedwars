@@ -12,9 +12,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
 import me.didi.BWMain;
+import me.didi.commands.subcommands.BedCmd;
 import me.didi.commands.subcommands.CreateCmd;
 import me.didi.commands.subcommands.DeleteCmd;
+import me.didi.commands.subcommands.FinishCmd;
+import me.didi.commands.subcommands.ForgeCmd;
 import me.didi.commands.subcommands.ShopCmd;
+import me.didi.commands.subcommands.SpawnCmd;
 
 public class CommandManager implements TabExecutor
 {
@@ -28,6 +32,11 @@ public class CommandManager implements TabExecutor
 		subCommands.add(new ShopCmd(plugin));
 		subCommands.add(new CreateCmd(plugin));
 		subCommands.add(new DeleteCmd(plugin));
+		subCommands.add(new SpawnCmd(plugin));
+		subCommands.add(new FinishCmd(plugin));
+		subCommands.add(new StartCommand(plugin));
+		subCommands.add(new BedCmd(plugin));
+		subCommands.add(new ForgeCmd(plugin));
 	}
 
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args)

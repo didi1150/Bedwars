@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
@@ -17,8 +18,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import me.didi.commands.BWCommand;
 import me.didi.commands.CommandManager;
+import me.didi.listener.BlockListener;
 import me.didi.listener.PlayerListener;
-import me.didi.listener.WorldLoadListener;
 import me.didi.utils.GameTeam;
 import me.didi.utils.GameManager;
 import me.didi.utils.gamestates.GameState;
@@ -37,7 +38,7 @@ public class BWMain extends JavaPlugin
 	private static BWMain instance;
 	private int min_players, max_players, maxplayerperteam;
 	private Voting voting;
-	private ArrayList<Map> maps;
+	private ArrayList<Map> maps = new ArrayList<Map>();
 	private GameStateManager gameStateManager;
 	private ArrayList<Player> players;
 	private Inventory teamInventory;
@@ -50,8 +51,8 @@ public class BWMain extends JavaPlugin
 		initFiles();
 		addConfigValues();
 		addMySQLDefaultValues();
-		initValues();
 		initVoting();
+		initValues();
 		gameStateManager.setGameState(GameState.LOBBY_STATE);
 		maxplayerperteam = getConfig().getInt("maxplayersperteam");
 		registerCommands();
@@ -62,8 +63,8 @@ public class BWMain extends JavaPlugin
 	private void registerEvents()
 	{
 		PluginManager pm = Bukkit.getPluginManager();
-		pm.registerEvents(new PlayerListener(instance), instance);
-		pm.registerEvents(new WorldLoadListener(), instance);
+		pm.registerEvents(new PlayerListener(this, gameManager), this);
+		pm.registerEvents(new BlockListener(this), this);
 	}
 
 	public void addMySQLDefaultValues()
@@ -88,7 +89,6 @@ public class BWMain extends JavaPlugin
 
 	private void initVoting()
 	{
-		maps = new ArrayList<Map>();
 		if (getConfig().contains("Maps"))
 		{
 			for (String current : getConfig().getConfigurationSection("Maps").getKeys(false))
@@ -101,12 +101,13 @@ public class BWMain extends JavaPlugin
 				{
 					Bukkit.getConsoleSender().sendMessage(
 							BWMain.prefix + "§4Die Map " + map.getName() + " §cmuss noch eingerichtet werden!");
+					return;
 				}
 			}
 			if (maps.size() >= Voting.MAP_AMOUNT)
 			{
 				voting = new Voting(this, maps);
-				gameManager.setVoting(voting);
+				Bukkit.getConsoleSender().sendMessage("hi");
 			}
 		} else
 			return;
@@ -185,9 +186,10 @@ public class BWMain extends JavaPlugin
 	{
 		min_players = getConfig().getInt("minplayer");
 		max_players = getConfig().getInt("maxplayer");
-		gameStateManager = new GameStateManager(instance);
+		gameStateManager = new GameStateManager(this);
 		players = new ArrayList<Player>();
-		gameManager = new GameManager(BWMain.getInstance());
+		gameManager = new GameManager(this);
+		gameManager.setVoting(voting);
 	}
 
 	public void registerCommands()

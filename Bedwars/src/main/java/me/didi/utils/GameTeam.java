@@ -2,11 +2,16 @@ package me.didi.utils;
 
 import java.util.ArrayList;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.material.Bed;
 
 import me.didi.BWMain;
 import me.didi.utils.voting.Map;
@@ -17,10 +22,12 @@ public class GameTeam
 	private ArrayList<String> members;
 	private byte colorData;
 	private int maxPlayers;
+	BWMain plugin = BWMain.getInstance();
+	public static final String TEAM_INVENTORY_NAME = ChatColor.GOLD + "WÃ¤hle dein Team!";
+	private Location bedHeadLocation;
+	private BlockFace bedFacing;
+	GameManager gameManager = plugin.getGameManager();
 	private Location spawn;
-	static BWMain plugin = BWMain.getInstance();
-	public static final String TEAM_INVENTORY_NAME = "§6Wähle dein Team!";
-	private GameManager gameManager;
 
 	public GameTeam(String name, String prefix, byte colorData)
 	{
@@ -28,7 +35,6 @@ public class GameTeam
 		this.prefix = prefix;
 		this.colorData = colorData;
 		this.members = new ArrayList<String>();
-		this.gameManager = plugin.getGameManager();
 	}
 
 	public String getName()
@@ -43,7 +49,7 @@ public class GameTeam
 
 	public String getPrefix()
 	{
-		return prefix.replaceAll("&", "§");
+		return plugin.getConfig().getString("Teams." + getName() + ".prefix");
 	}
 
 	public ArrayList<String> getMembers()
@@ -64,7 +70,7 @@ public class GameTeam
 		ArrayList<String> players = new ArrayList<String>();
 		for (String player : members)
 		{
-			players.add("§7- " + getPrefix() + player);
+			players.add("Â§7- " + getPrefix() + player);
 		}
 		meta.setLore(players);
 		is.setItemMeta(meta);
@@ -85,8 +91,8 @@ public class GameTeam
 	public void create()
 	{
 		plugin.getConfig().set("Teams." + name + ".name", name.toUpperCase());
-		plugin.getConfig().set("Teams." + getName().toUpperCase() + ".prefix", getPrefix());
-		plugin.getConfig().set("Teams." + getName().toUpperCase() + ".colordata", getColorData());
+		plugin.getConfig().set("Teams." + getName().toUpperCase() + ".prefix", prefix);
+		plugin.getConfig().set("Teams." + getName().toUpperCase() + ".colordata", colorData);
 		plugin.saveCfg(plugin.getConfig(), plugin.file);
 	}
 
@@ -113,9 +119,8 @@ public class GameTeam
 		plugin.saveConfig();
 	}
 
-	public void setSpawn(Map map, Location spawn)
+	public void saveSpawn(Map map, Location spawn)
 	{
-		this.spawn = spawn;
 		plugin.getConfig().set("Maps." + map.getName().toUpperCase() + ".teams." + name + ".spawn.x", spawn.getX());
 		plugin.getConfig().set("Maps." + map.getName().toUpperCase() + ".teams." + name + ".spawn.y", spawn.getY());
 		plugin.getConfig().set("Maps." + map.getName().toUpperCase() + ".teams." + name + ".spawn.z", spawn.getZ());
@@ -127,8 +132,77 @@ public class GameTeam
 		plugin.saveConfig();
 	}
 
+	public void setSpawn(Location loc)
+	{
+		this.spawn = loc;
+	}
+
+	public boolean bedExists()
+	{
+		return bedHeadLocation.getBlock().getType() != Material.AIR;
+	}
+
+	public String bedPlaced()
+	{
+		return bedExists() ? "Â§aâœ“" : "Â§câœ˜";
+	}
+
+	public void placeBed()
+	{
+		Block bedHeadBlock = bedHeadLocation.getBlock();
+		Block bedFootBlock = bedHeadBlock.getRelative(bedFacing.getOppositeFace());
+
+		BlockState bedFootState = bedFootBlock.getState();
+		bedFootState.setType(Material.BED_BLOCK);
+		Bed bedFootData = new Bed(Material.BED_BLOCK);
+		bedFootData.setHeadOfBed(false);
+		bedFootData.setFacingDirection(bedFacing);
+		bedFootState.setData(bedFootData);
+		bedFootState.update(true);
+
+		BlockState bedHeadState = bedHeadBlock.getState();
+		bedHeadState.setType(Material.BED_BLOCK);
+		Bed bedHeadData = new Bed(Material.BED_BLOCK);
+		bedHeadData.setHeadOfBed(true);
+		bedHeadData.setFacingDirection(bedFacing);
+		bedHeadState.setData(bedHeadData);
+		bedHeadState.update(true);
+	}
+
+	public void setBedHeadLocation(Location bedHeadLocation)
+	{
+		this.bedHeadLocation = bedHeadLocation;
+	}
+
+	public Location getBedBottom()
+	{
+		/*
+		 * Block bedHeadBlock =
+		 * gameManager.getLocation(plugin.getVoting().getWinnerMap(), "teams." +
+		 * getName() + ".bed") .getBlock(); Block bedFootBlock =
+		 * bedHeadBlock.getRelative(
+		 * BlockFace.valueOf(plugin.getConfig().getString("teams." + getName() +
+		 * ".bed.face")).getOppositeFace()); return bedFootBlock.getLocation();
+		 */
+		Block bedBottomBlock = bedHeadLocation.getBlock().getRelative(bedFacing.getOppositeFace());
+		return bedBottomBlock.getLocation();
+	}
+
+	public Location getBedTop()
+	{
+		return bedHeadLocation;
+		// return gameManager.getLocation(plugin.getVoting().getWinnerMap(), "teams." +
+		// getName() + ".bed");
+	}
+
+	public void setBedFacing(BlockFace bedFacing)
+	{
+		this.bedFacing = bedFacing;
+	}
+
 	public void addMember(Player p)
 	{
+		GameManager gameManager = plugin.getGameManager();
 		if (!hasMember(p))
 		{
 			for (GameTeam team : gameManager.getTeams())
@@ -139,7 +213,7 @@ public class GameTeam
 			members.add(p.getName());
 		} else
 		{
-			p.sendMessage(BWMain.prefix + "§cDu bist schon in diesem Team!");
+			p.sendMessage(BWMain.prefix + "Â§cDu bist schon in diesem Team!");
 		}
 	}
 
@@ -152,5 +226,11 @@ public class GameTeam
 	public Location getSpawn()
 	{
 		return spawn;
+	}
+
+	public Location getForge()
+	{
+		GameManager gameManager = new GameManager(plugin);
+		return gameManager.getLocation(plugin.getVoting().getWinnerMap(), "teams." + getName() + ".spawner");
 	}
 }

@@ -3,7 +3,6 @@ package me.didi.commands.subcommands;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.entity.Player;
@@ -53,15 +52,15 @@ public class CreateCmd extends SubCommand
 		{
 			if (args[1].equalsIgnoreCase("team"))
 			{
-				ChatColor prefix = ChatColor.valueOf(args[4]);
-				DyeColor color = DyeColor.valueOf(args[3]);
+				ChatColor prefix = gameManager.getChatColor(args[3]);
+				DyeColor color = gameManager.getDyeColor(args[3]);
 				GameTeam team = new GameTeam(args[2], prefix.toString(), color.getData());
 
 				if (!team.exists())
 				{
 					team.create();
-					player.sendMessage(BWMain.prefix + ChatColor.GREEN + "Du hast erfolgreich das Team "
-							+ team.getPrefix() + team.getName() + ChatColor.GREEN + " erstellt!");
+					player.sendMessage(BWMain.prefix + ChatColor.GREEN + "Du hast erfolgreich das Team " + prefix
+							+ team.getName() + ChatColor.GREEN + " erstellt!");
 				}
 			} else if (args[1].equalsIgnoreCase("map"))
 			{
@@ -75,6 +74,11 @@ public class CreateCmd extends SubCommand
 			}
 		}
 	}
+
+	/*
+	 * BlockFace face = BlockFace.valueOf(Yaw.getYaw(player).toString());
+	 * gameManager.placeBed(player.getLocation(), face);
+	 */
 
 	@Override
 	public List<String> getSubCommandArgs(Player player, String[] args)
